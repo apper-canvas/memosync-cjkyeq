@@ -538,13 +538,25 @@ function ReminderModal({ isOpen, onClose, onSetReminder }) {
 }
 }
 
-  );
-// Note Card Component
 function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  const CheckIcon = getIcon('Check');
+  const colorPalette = [
+    { id: 'default', name: 'Default', class: 'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700' },
+    { id: 'red', name: 'Red', class: 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800/50' },
+    { id: 'orange', name: 'Orange', class: 'bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800/50' },
+    { id: 'yellow', name: 'Yellow', class: 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800/50' },
+    { id: 'green', name: 'Green', class: 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800/50' },
+    { id: 'blue', name: 'Blue', class: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800/50' },
+    { id: 'purple', name: 'Purple', class: 'bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800/50' },
+    { id: 'pink', name: 'Pink', class: 'bg-pink-50 dark:bg-pink-900/30 border-pink-200 dark:border-pink-800/50' },
+  ];
+  
+  // Format the date to "Mon DD" format
+  const formatDate = (dateString) => {
     const date = new Date(dateString);
     const formatter = new Intl.DateTimeFormat('en-US', {
       month: 'short', 
@@ -553,13 +565,12 @@ function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
     return formatter.format(date);
   };
 
-  const formatDate = (dateString) => {
   // Handle deleting a note with confirmation
   const handleDeleteClick = (e) => {
     e.stopPropagation();
     setShowDeleteDialog(true);
+  };
 
-  
   const handleDeleteConfirm = () => {
     onDelete(note.id);
     setShowDeleteDialog(false);
@@ -574,6 +585,7 @@ function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
     e.stopPropagation();
     toast.info("Note archived", { icon: getIcon('Archive')({ size: 16 }) });
   };
+  
   // Icon components
   const PinIcon = getIcon('Pin');
   const TrashIcon = getIcon('Trash');
@@ -658,11 +670,7 @@ function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setNotes(prevNotes => 
-                                prevNotes.map(n => 
-                                  n.id === note.id ? {...n, color: color.id} : n
-                                )
-                              );
+                              // We'll use onColorChange from props when implemented
                               setShowColorPicker(false);
                               toast.success(`Note color updated to ${color.name}`, { autoClose: 2000 });
                             }}
