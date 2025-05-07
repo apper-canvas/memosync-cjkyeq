@@ -546,6 +546,8 @@ function ReminderModal({ isOpen, onClose, onSetReminder }) {
 
 function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
