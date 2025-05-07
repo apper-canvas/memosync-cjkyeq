@@ -441,7 +441,6 @@ function MainFeature() {
   );
 }
 
-}
 
 // Reminder Modal Component
 function ReminderModal({ isOpen, onClose, onSetReminder }) {
@@ -475,7 +474,7 @@ function ReminderModal({ isOpen, onClose, onSetReminder }) {
               onClick={onClose}
               className="p-1 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700"
             >
-              <getIcon("X") size={20} />
+              {getIcon("X")({ size: 20 })}
             </button>
           </div>
           
@@ -486,7 +485,7 @@ function ReminderModal({ isOpen, onClose, onSetReminder }) {
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-surface-500">
-                  <getIcon("Calendar") size={18} />
+                  {getIcon("Calendar")({ size: 18 })}
                 </span>
                 <input
                   type="date"
@@ -505,7 +504,7 @@ function ReminderModal({ isOpen, onClose, onSetReminder }) {
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-surface-500">
-                  <getIcon("Clock") size={18} />
+                  {getIcon("Clock")({ size: 18 })}
                 </span>
                 <input
                   type="time"
@@ -536,40 +535,42 @@ function ReminderModal({ isOpen, onClose, onSetReminder }) {
         </motion.div>
       </div>
     </div>
+}
+
   );
 // Note Card Component
 function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  // Format date
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const formatDate = (dateString) => {
-  // Handle deleting a note with confirmation
-  const handleDeleteClick = (e) => {
-    e.stopPropagation();
-    setShowDeleteDialog(true);
-  };
+  const [isHovered, setIsHovered] = useState(false);
   
-  const handleDeleteConfirm = () => {
-    onDelete(note.id);
-    setShowDeleteDialog(false);
-  };
-  
-  const handleDeleteCancel = () => {
-    setShowDeleteDialog(false);
-  };
-  
-  // Handle archive action
-  const handleArchiveClick = () => {
-    toast.info("Note archived", { icon: <ArchiveIcon size={16} /> });
-  };
-
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const date = new Date(dateString);
     const formatter = new Intl.DateTimeFormat('en-US', {
       month: 'short', 
       day: 'numeric',
     });
+    return formatter.format(date);
+  };
+
+  const formatDate = (dateString) => {
+  // Handle deleting a note with confirmation
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    setShowDeleteDialog(true);
+
+  
+  const handleDeleteConfirm = () => {
+    onDelete(note.id);
+    setShowDeleteDialog(false);
+
+  
+  const handleDeleteCancel = () => {
+    setShowDeleteDialog(false);
+
+  
+  // Handle archive action
+    toast.info("Note archived", { icon: getIcon('Archive')({ size: 16 }) });
     return formatter.format(date);
   };
   
