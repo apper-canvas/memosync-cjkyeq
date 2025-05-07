@@ -308,51 +308,43 @@ function MainFeature() {
                   <button
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && setIsPinned(!isPinned)}
+                    onClick={() => setIsPinned(!isPinned)}
                     type="button"
-                    <Tooltip content={isPinned ? "Unpin note" : "Pin note"}>
-                      <PinIcon size={18} />
-                    </Tooltip>
                     className={`p-2 rounded-full transition-colors ${isPinned ? 'text-accent' : 'hover:bg-surface-200 dark:hover:bg-surface-700'}`}
                     aria-label={isPinned ? "Unpin note" : "Pin note"}
-                  {/* Reminder button */}
+                  >
                     <PinIcon size={18} />
                   </button>
-                    onClick={handleAddReminder}
                   
-                  {/* Other note options (non-functional) */}
-                    tabIndex={0}
+                  {/* Reminder button */}
                   <button
-                    <Tooltip content="Add reminder">
-                      <BellIcon size={18} />
-                    </Tooltip>
+                    tabIndex={0}
+                    onClick={handleAddReminder}
+                    type="button"
                     className="p-2 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
                     aria-label="Add reminder"
-                  {/* Image upload button */}
                   >
                     <BellIcon size={18} />
-                    onClick={triggerFileInput}
                   </button>
                   
-                    tabIndex={0}
+                  {/* Image upload button */}
                   <button
-                    <Tooltip content="Add image">
-                      <ImageIcon size={18} />
-                    </Tooltip>
+                    tabIndex={0}
+                    onClick={triggerFileInput}
+                    type="button"
                     className="p-2 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
                     aria-label="Add image"
-                  {/* Archive button */}
                   >
                     <ImageIcon size={18} />
+                  </button>
+                  
+                  {/* Archive button */}
+                  <button
+                    tabIndex={0}
                     onClick={() => {
                       toast.info("Create note first to archive it", { icon: <ArchiveIcon size={16} /> });
                     }}
-                  </button>
-                  
-                    tabIndex={0}
-                  <button
-                    <Tooltip content="Archive note">
-                      <ArchiveIcon size={18} />
-                    </Tooltip>
+                    type="button"
                     className="p-2 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
                     aria-label="Archive"
                   >
@@ -369,12 +361,12 @@ function MainFeature() {
                   >
                     Cancel
                   </button>
-                    className="px-3 py-1.5 text-sm bg-primary text-white hover:bg-primary-dark rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  <button
                     type="button"
-                    <CheckIcon size={16} className="mr-1 inline-block" />
                     onClick={handleSaveNote}
                     className="px-3 py-1.5 text-sm bg-primary text-white hover:bg-primary-dark rounded-md transition-colors"
                   >
+                    <CheckIcon size={16} className="mr-1 inline-block" />
                     Save
                   </button>
                 </div>
@@ -683,7 +675,6 @@ function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
                     </div>
                   )}
                 </div>
-                </button>
               </motion.div>
             )}
           </AnimatePresence>
