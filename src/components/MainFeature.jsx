@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import getIcon from '../utils/iconUtils';
@@ -12,7 +12,6 @@ function MainFeature() {
   const [noteToDelete, setNoteToDelete] = useState(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showColorPickerForNote, setShowColorPickerForNote] = useState(null);
-  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [noteTitle, setNoteTitle] = useState('');
   const [noteContent, setNoteContent] = useState('');
   const [selectedColor, setSelectedColor] = useState('default');
@@ -42,6 +41,8 @@ function MainFeature() {
   const titleInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Reminder modal state
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   // Color palette for notes
   const colorPalette = [
     { id: 'default', name: 'Default', class: 'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700' },
@@ -215,6 +216,14 @@ function MainFeature() {
     fileInputRef.current?.click();
   };
   
+  // Handle reminder setting
+  const handleSetReminder = (dateTime) => {
+    setIsReminderModalOpen(false);
+    toast.success("Reminder set for " + new Date(dateTime).toLocaleString(), {
+      icon: <BellIcon size={16} />,
+    });
+  };
+
   return (
     <div className="space-y-8">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
@@ -437,12 +446,16 @@ function MainFeature() {
           </p>
         </motion.div>
       )}
+      
+      {/* Reminder Modal */}
+      <ReminderModal 
+        isOpen={isReminderModalOpen} 
+        onClose={() => setIsReminderModalOpen(false)} 
+        onSetReminder={handleSetReminder} 
+      />
     </div>
   );
 }
-
-
-// Reminder Modal Component
 function ReminderModal({ isOpen, onClose, onSetReminder }) {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -535,8 +548,6 @@ function ReminderModal({ isOpen, onClose, onSetReminder }) {
         </motion.div>
       </div>
     </div>
-}
-}
 
 function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
   const [showColorPicker, setShowColorPicker] = useState(false);
