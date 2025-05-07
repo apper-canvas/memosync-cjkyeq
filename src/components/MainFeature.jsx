@@ -2,10 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import getIcon from '../utils/iconUtils';
+import Tooltip from './Tooltip';
+import ConfirmDialog from './ConfirmDialog';
 
 function MainFeature() {
   // States for note input and storage
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showColorPickerForNote, setShowColorPickerForNote] = useState(null);
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [noteTitle, setNoteTitle] = useState('');
   const [noteContent, setNoteContent] = useState('');
   const [selectedColor, setSelectedColor] = useState('default');
@@ -33,6 +40,7 @@ function MainFeature() {
   });
   const noteFormRef = useRef(null);
   const titleInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Color palette for notes
   const colorPalette = [
@@ -91,6 +99,10 @@ function MainFeature() {
   const ArchiveIcon = getIcon('Archive');
   const BellIcon = getIcon('Bell');
   const ImageIcon = getIcon('Image');
+  const CircleIcon = getIcon('Circle');
+  const CalendarIcon = getIcon('Calendar');
+  const ClockIcon = getIcon('Clock');
+  const DocumentIcon = getIcon('FileText');
   
   // Form handlers
   const expandNoteForm = () => {
@@ -126,7 +138,9 @@ function MainFeature() {
   };
   
   const handleDeleteNote = (noteId) => {
+    setShowDeleteDialog(false);
     setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+    setNoteToDelete(null);
     toast.info("Note deleted");
   };
   
@@ -138,6 +152,40 @@ function MainFeature() {
           : note
       )
     );
+    toast.success(
+      notes.find(note => note.id === noteId)?.isPinned 
+        ? "Note unpinned" 
+        : "Note pinned", 
+      { autoClose: 2000 }
+    );
+  };
+  
+  const handleChangeNoteColor = (noteId, colorId) => {
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId 
+          ? { ...note, color: colorId } 
+          : note
+      )
+    );
+    setShowColorPickerForNote(null);
+    toast.success("Note color updated", { autoClose: 2000 });
+  };
+  
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      toast.info("Image upload feature coming soon!", {
+        icon: <ImageIcon size={16} />,
+      });
+    }
+  };
+  
+  const handleArchiveNote = (noteId) => {
+    // In a real app, this would move the note to an archived section
+    toast.info("Note archived", { 
+      icon: <ArchiveIcon size={16} />
+    });
   };
   
   const handleKeyDown = (e) => {
@@ -146,13 +194,30 @@ function MainFeature() {
       handleSaveNote();
     }
   };
+  
+  const handleAddReminder = () => {
+    setIsReminderModalOpen(true);
+  };
+  
+  const handleSetReminder = (dateTime) => {
+    setIsReminderModalOpen(false);
+    toast.success("Reminder set for " + new Date(dateTime).toLocaleString(), {
+      icon: <BellIcon size={16} />,
+    });
+  };
 
   // Group notes into pinned and unpinned
   const pinnedNotes = notes.filter(note => note.isPinned);
   const unpinnedNotes = notes.filter(note => !note.isPinned);
   
+  // Hidden file input for image upload
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+  
   return (
     <div className="space-y-8">
+      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
       {/* Note creation form */}
       <motion.div
         ref={noteFormRef}
@@ -203,61 +268,91 @@ function MainFeature() {
               >
                 <div className="flex space-x-1">
                   {/* Color picker dropdown */}
-                  <div className="relative group">
-                    <button 
-                      type="button"
-                      className="p-2 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
-                      aria-label="Choose color"
-                    >
-                      <PaletteIcon size={18} />
-                    </button>
+                  <div className="relative">
+                    <Tooltip content="Choose note color">
+                      <button 
+                        type="button"
+                        onClick={() => setShowColorPicker(!showColorPicker)}
+                        className="p-2 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+                        aria-label="Choose color"
+                      >
+                        <PaletteIcon size={18} />
+                      </button>
+                    </Tooltip>
                     
-                    <div className="absolute left-0 bottom-full mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                    {showColorPicker && (
+                      <div className="absolute left-0 bottom-full mb-2 z-10">
                       <div className="bg-white dark:bg-surface-800 rounded-lg shadow-soft p-2 grid grid-cols-4 gap-1">
                         {colorPalette.map((color) => (
                           <button
                             key={color.id}
                             type="button"
-                            onClick={() => setSelectedColor(color.id)}
+                            onClick={() => {
+                              setSelectedColor(color.id);
+                              setShowColorPicker(false);
+                              toast.success(`Note color set to ${color.name}`, { autoClose: 2000 });
+                            }}
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${color.class} hover:scale-110 transition-transform`}
                             aria-label={`Select ${color.name}`}
+                            tabIndex={0}
                           >
-                            {selectedColor === color.id && <CheckIcon size={14} />}
+                            {selectedColor === color.id && <CheckIcon className="text-surface-700 dark:text-surface-200" size={14} />}
                           </button>
                         ))}
                       </div>
                     </div>
+                    )}
                   </div>
                   
                   {/* Pin toggle */}
                   <button
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && setIsPinned(!isPinned)}
                     type="button"
-                    onClick={() => setIsPinned(!isPinned)}
+                    <Tooltip content={isPinned ? "Unpin note" : "Pin note"}>
+                      <PinIcon size={18} />
+                    </Tooltip>
                     className={`p-2 rounded-full transition-colors ${isPinned ? 'text-accent' : 'hover:bg-surface-200 dark:hover:bg-surface-700'}`}
                     aria-label={isPinned ? "Unpin note" : "Pin note"}
-                  >
+                  {/* Reminder button */}
                     <PinIcon size={18} />
                   </button>
+                    onClick={handleAddReminder}
                   
                   {/* Other note options (non-functional) */}
+                    tabIndex={0}
                   <button
-                    type="button"
+                    <Tooltip content="Add reminder">
+                      <BellIcon size={18} />
+                    </Tooltip>
                     className="p-2 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
                     aria-label="Add reminder"
+                  {/* Image upload button */}
                   >
                     <BellIcon size={18} />
+                    onClick={triggerFileInput}
                   </button>
                   
+                    tabIndex={0}
                   <button
-                    type="button"
+                    <Tooltip content="Add image">
+                      <ImageIcon size={18} />
+                    </Tooltip>
                     className="p-2 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
                     aria-label="Add image"
+                  {/* Archive button */}
                   >
                     <ImageIcon size={18} />
+                    onClick={() => {
+                      toast.info("Create note first to archive it", { icon: <ArchiveIcon size={16} /> });
+                    }}
                   </button>
                   
+                    tabIndex={0}
                   <button
-                    type="button"
+                    <Tooltip content="Archive note">
+                      <ArchiveIcon size={18} />
+                    </Tooltip>
                     className="p-2 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
                     aria-label="Archive"
                   >
@@ -267,14 +362,16 @@ function MainFeature() {
                 
                 <div className="flex space-x-2">
                   <button
+                    tabIndex={0}
                     type="button"
                     onClick={resetNoteForm}
                     className="px-3 py-1.5 text-sm hover:bg-surface-200 dark:hover:bg-surface-700 rounded-md transition-colors"
                   >
                     Cancel
                   </button>
-                  <button
+                    className="px-3 py-1.5 text-sm bg-primary text-white hover:bg-primary-dark rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     type="button"
+                    <CheckIcon size={16} className="mr-1 inline-block" />
                     onClick={handleSaveNote}
                     className="px-3 py-1.5 text-sm bg-primary text-white hover:bg-primary-dark rounded-md transition-colors"
                   >
@@ -352,12 +449,130 @@ function MainFeature() {
   );
 }
 
+}
+
+// Reminder Modal Component
+function ReminderModal({ isOpen, onClose, onSetReminder }) {
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  
+  if (!isOpen) return null;
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (selectedDate && selectedTime) {
+      const dateTime = new Date(`${selectedDate}T${selectedTime}`);
+      onSetReminder(dateTime);
+    } else {
+      toast.error("Please select both date and time");
+    }
+  };
+  
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen p-4 bg-black/40 backdrop-blur-sm">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }} 
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="relative bg-white dark:bg-surface-800 rounded-xl shadow-lg max-w-md w-full"
+        >
+          <div className="p-4 border-b border-surface-200 dark:border-surface-700 flex justify-between items-center">
+            <h3 className="text-lg font-medium">Set Reminder</h3>
+            <button 
+              onClick={onClose}
+              className="p-1 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700"
+            >
+              <getIcon("X") size={20} />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                Date
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-surface-500">
+                  <getIcon("Calendar") size={18} />
+                </span>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="input pl-10"
+                  min={new Date().toISOString().split('T')[0]}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                Time
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-surface-500">
+                  <getIcon("Clock") size={18} />
+                </span>
+                <input
+                  type="time"
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="input pl-10"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg text-sm hover:bg-surface-100 dark:hover:bg-surface-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-lg text-sm bg-primary text-white hover:bg-primary-dark"
+              >
+                Set Reminder
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </div>
+  );
 // Note Card Component
 function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
   const [isHovered, setIsHovered] = useState(false);
   
   // Format date
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const formatDate = (dateString) => {
+  // Handle deleting a note with confirmation
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    setShowDeleteDialog(true);
+  };
+  
+  const handleDeleteConfirm = () => {
+    onDelete(note.id);
+    setShowDeleteDialog(false);
+  };
+  
+  const handleDeleteCancel = () => {
+    setShowDeleteDialog(false);
+  };
+  
+  // Handle archive action
+  const handleArchiveClick = () => {
+    toast.info("Note archived", { icon: <ArchiveIcon size={16} /> });
+  };
+
     const date = new Date(dateString);
     const formatter = new Intl.DateTimeFormat('en-US', {
       month: 'short', 
@@ -404,28 +619,70 @@ function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
                 className="flex"
               >
                 <button
+                  data-testid={`delete-note-${note.id}`}
                   type="button"
-                  onClick={() => onDelete(note.id)}
+                  onClick={handleDeleteClick}
                   className="p-1.5 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
                   aria-label="Delete note"
                 >
-                  <TrashIcon size={16} />
+                  <Tooltip content="Delete note">
+                    <TrashIcon size={16} />
+                  </Tooltip>
                 </button>
                 
                 <button
                   type="button"
+                  onClick={handleArchiveClick}
                   className="p-1.5 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
                   aria-label="Archive note"
                 >
-                  <ArchiveIcon size={16} />
+                  <Tooltip content="Archive note">
+                    <ArchiveIcon size={16} />
+                  </Tooltip>
                 </button>
                 
-                <button
-                  type="button"
-                  className="p-1.5 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
-                  aria-label="Change color"
-                >
-                  <PaletteIcon size={16} />
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowColorPicker(!showColorPicker);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+                    aria-label="Change color"
+                  >
+                    <Tooltip content="Change color">
+                      <PaletteIcon size={16} />
+                    </Tooltip>
+                  </button>
+                  
+                  {showColorPicker && (
+                    <div className="absolute right-0 bottom-full mb-2 z-20">
+                      <div className="bg-white dark:bg-surface-800 rounded-lg shadow-soft p-2 grid grid-cols-4 gap-1">
+                        {colorPalette.map((color) => (
+                          <button
+                            key={color.id}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNotes(prevNotes => 
+                                prevNotes.map(n => 
+                                  n.id === note.id ? {...n, color: color.id} : n
+                                )
+                              );
+                              setShowColorPicker(false);
+                              toast.success(`Note color updated to ${color.name}`, { autoClose: 2000 });
+                            }}
+                            className={`w-6 h-6 rounded-full flex items-center justify-center ${color.class} hover:scale-110 transition-transform`}
+                            aria-label={`Select ${color.name}`}
+                          >
+                            {note.color === color.id && <CheckIcon className="text-surface-700 dark:text-surface-200" size={12} />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 </button>
               </motion.div>
             )}
@@ -436,11 +693,18 @@ function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
             onClick={() => onTogglePin(note.id)}
             className={`p-1.5 rounded-full transition-colors ${note.isPinned ? 'text-accent' : 'hover:bg-surface-200 dark:hover:bg-surface-700'}`}
             aria-label={note.isPinned ? "Unpin note" : "Pin note"}
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && onTogglePin(note.id)}
           >
-            <PinIcon size={16} />
+            <Tooltip content={note.isPinned ? "Unpin note" : "Pin note"}>
+              <PinIcon size={16} />
+            </Tooltip>
           </button>
         </div>
       </div>
+      
+      {/* Confirmation Dialog */}
+      <ConfirmDialog isOpen={showDeleteDialog} onClose={handleDeleteCancel} onConfirm={() => onDelete(note.id)} title="Delete Note" message="Are you sure you want to delete this note? This action cannot be undone." confirmText="Delete" variant="danger" />
     </motion.div>
   );
 }
