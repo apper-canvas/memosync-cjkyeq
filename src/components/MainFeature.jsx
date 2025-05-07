@@ -217,12 +217,7 @@ function MainFeature() {
   };
   
   // Handle reminder setting
-  const handleSetReminder = (dateTime) => {
-    setIsReminderModalOpen(false);
-    toast.success("Reminder set for " + new Date(dateTime).toLocaleString(), {
-      icon: <BellIcon size={16} />,
-    });
-  };
+  // Already defined above at line 203
 
   return (
     <div className="space-y-8">
