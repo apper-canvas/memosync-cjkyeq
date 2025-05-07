@@ -536,6 +536,7 @@ function ReminderModal({ isOpen, onClose, onSetReminder }) {
       </div>
     </div>
 }
+}
 
   );
 // Note Card Component
@@ -543,8 +544,7 @@ function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
     const date = new Date(dateString);
     const formatter = new Intl.DateTimeFormat('en-US', {
       month: 'short', 
@@ -563,17 +563,17 @@ function NoteCard({ note, colorClass, onDelete, onTogglePin }) {
   const handleDeleteConfirm = () => {
     onDelete(note.id);
     setShowDeleteDialog(false);
-
+  };
   
   const handleDeleteCancel = () => {
     setShowDeleteDialog(false);
-
-  
-  // Handle archive action
-    toast.info("Note archived", { icon: getIcon('Archive')({ size: 16 }) });
-    return formatter.format(date);
   };
   
+  // Handle archive action
+  const handleArchiveClick = (e) => {
+    e.stopPropagation();
+    toast.info("Note archived", { icon: getIcon('Archive')({ size: 16 }) });
+  };
   // Icon components
   const PinIcon = getIcon('Pin');
   const TrashIcon = getIcon('Trash');
